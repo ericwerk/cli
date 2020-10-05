@@ -17,6 +17,13 @@ import java.io.File;
 
 class PullCommand extends AbstractCommand {
 
+    private static final String JSON_FORMAT = "json";
+    private static final String DSL_FORMAT = "dsl";
+    private static final String PLANTUML_FORMAT = "plantuml";
+    private static final String WEBSEQUENCEDIAGRAMS_FORMAT = "websequencediagrams";
+    private static final String MERMAID_FORMAT = "mermaid";
+    private static final String ILOGRAPH_FORMAT = "ilograph";
+
     PullCommand(String version) {
         super(version);
     }
@@ -40,6 +47,10 @@ class PullCommand extends AbstractCommand {
         option.setRequired(true);
         options.addOption(option);
 
+        option = new Option("f", "format", true, String.format("Export format: %s", String.join(Arrays.asList(JSON_FORMAT, DSL_FORMAT), "|"));
+        option.setRequired(false);
+        options.addOption(option);
+
         CommandLineParser commandLineParser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
 
@@ -47,6 +58,7 @@ class PullCommand extends AbstractCommand {
         long workspaceId = 1;
         String apiKey = "";
         String apiSecret = "";
+        String exportFormat = "";
 
         try {
             CommandLine cmd = commandLineParser.parse(options, args);
@@ -55,6 +67,7 @@ class PullCommand extends AbstractCommand {
             workspaceId = Long.parseLong(cmd.getOptionValue("workspaceId"));
             apiKey = cmd.getOptionValue("apiKey");
             apiSecret = cmd.getOptionValue("apiSecret");
+            exportFormat = cmd.getOptionValue("format");
         } catch (ParseException e) {
             System.out.println(e.getMessage());
             formatter.printHelp("pull", options);
@@ -67,10 +80,16 @@ class PullCommand extends AbstractCommand {
         structurizrClient.setAgent(getAgent());
         Workspace workspace = structurizrClient.getWorkspace(workspaceId);
 
-        File file = new File("structurizr-" + workspaceId + "-workspace.json");
-        WorkspaceUtils.saveWorkspaceToJson(workspace, file);
-        System.out.println(" - workspace saved as " + file.getCanonicalPath());
+        if (exportFormat == DSL_FORMAT) {
+            File file = new File("structurizr-" + workspaceId + "-workspace.dsl");
+            WorkspaceUtils.saveWorkspaceToJson(workspace, file);
+            System.out.println(" - workspace saved as " + file.getCanonicalPath());
+        } else {
+            File file = new File("structurizr-" + workspaceId + "-workspace.json");
+            WorkspaceUtils.saveWorkspaceToJson(workspace, file);
+            System.out.println(" - workspace saved as " + file.getCanonicalPath());
+        }
+
         System.out.println(" - finished");
     }
-
 }
